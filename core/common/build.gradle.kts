@@ -35,6 +35,7 @@ dependencies {
   implementation(libs.javax.inject)
   implementation(libs.hilt.android)
   implementation(libs.navigation.compose)
+  implementation(libs.androidx.datastore.preferences)
   ksp(libs.hilt.compiler)
   
   testImplementation(libs.junit)

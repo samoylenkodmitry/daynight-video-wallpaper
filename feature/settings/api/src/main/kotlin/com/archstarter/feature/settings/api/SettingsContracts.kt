@@ -1,36 +1,29 @@
 package com.archstarter.feature.settings.api
 
 import com.archstarter.core.common.presenter.ParamInit
+import com.archstarter.core.common.wallpaper.DaySlot
+import com.archstarter.core.common.wallpaper.WallpaperScheduleMode
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
-import java.util.LinkedHashMap
-import java.util.Locale
 
 @Serializable
 data object Settings
 
-val languageCodes: Map<String, String> =
-    Locale.getISOLanguages()
-        .map { code ->
-            val name = Locale(code).getDisplayLanguage(Locale.ENGLISH)
-            name.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ENGLISH) else it.toString() } to code
-        }
-        .sortedBy { it.first }
-        .toMap(LinkedHashMap())
-
-val supportedLanguages = languageCodes.keys.toList()
-
-data class SettingsState(
-    val nativeLanguage: String = "English",
-    val learningLanguage: String = "Spanish"
+data class ScheduleSlotUi(
+    val slot: DaySlot,
+    val title: String,
+    val startMinutes: Int,
 )
 
-interface SettingsStateProvider {
-    val state: StateFlow<SettingsState>
-}
+data class SettingsState(
+    val scheduleMode: WallpaperScheduleMode = WallpaperScheduleMode.SOLAR,
+    val slots: List<ScheduleSlotUi> = emptyList(),
+    val description: String = "",
+)
 
-interface SettingsPresenter: ParamInit<Unit> {
+interface SettingsPresenter : ParamInit<Unit> {
     val state: StateFlow<SettingsState>
-    fun onNativeSelected(language: String)
-    fun onLearningSelected(language: String)
+    fun onScheduleModeSelected(mode: WallpaperScheduleMode)
+    fun onSlotTimeSelected(slot: DaySlot, minutes: Int)
+    fun onResetDefaults()
 }

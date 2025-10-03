@@ -1,75 +1,90 @@
 package com.archstarter.feature.settings.impl
 
-import androidx.lifecycle.SavedStateHandle
+import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.archstarter.core.common.scope.ScreenBus
+import com.archstarter.core.common.presenter.PresenterProvider
 import com.archstarter.core.common.scope.ScreenComponent
 import com.archstarter.core.common.viewmodel.AssistedVmFactory
 import com.archstarter.core.common.viewmodel.VmKey
-import com.archstarter.feature.settings.api.LanguageChooserRole
+import com.archstarter.core.common.viewmodel.scopedViewModel
+import com.archstarter.core.common.wallpaper.DaySlot
+import com.archstarter.core.common.wallpaper.WallpaperPreferencesRepository
+import com.archstarter.core.common.wallpaper.WallpaperScheduleMode
+import com.archstarter.core.common.wallpaper.defaultSlotSchedule
+import com.archstarter.feature.settings.api.ScheduleSlotUi
 import com.archstarter.feature.settings.api.SettingsPresenter
 import com.archstarter.feature.settings.api.SettingsState
-import com.archstarter.feature.settings.impl.data.SettingsRepository
-import com.archstarter.feature.settings.impl.language.LanguageSelectionBus
 import dagger.Binds
 import dagger.Module
-import dagger.assisted.Assisted
+import dagger.Provides
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class SettingsViewModel @AssistedInject constructor(
-    private val repo: SettingsRepository,
-    private val screenBus: ScreenBus, // from Screen/Subscreen (inherited)
-    private val languageSelectionBus: LanguageSelectionBus,
-    @Assisted private val handle: SavedStateHandle
+    private val repository: WallpaperPreferencesRepository,
 ) : ViewModel(), SettingsPresenter {
-    override val state: StateFlow<SettingsState> = repo.state
+    private val formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
+    private val _state = MutableStateFlow(SettingsState())
+    override val state: StateFlow<SettingsState> = _state
 
     init {
-        println("SettingsViewModel created vm=${System.identityHashCode(this)}, bus=${System.identityHashCode(screenBus)}")
-        languageSelectionBus.selections
-            .onEach { event ->
-                when (event.role) {
-                    LanguageChooserRole.Native -> {
-                        repo.updateNative(event.language)
-                        screenBus.send("Native language changed to ${event.language}")
-                    }
-                    LanguageChooserRole.Learning -> {
-                        repo.updateLearning(event.language)
-                        screenBus.send("Learning language changed to ${event.language}")
-                    }
+        viewModelScope.launch {
+            repository.settings.collect { settings ->
+                val slots = DaySlot.values().map { slot ->
+                    val minutes = settings.slotSchedules.getValue(slot)
+                    ScheduleSlotUi(slot, slot.displayName, minutes)
                 }
+                val description = when (settings.scheduleMode) {
+                    WallpaperScheduleMode.SOLAR ->
+                        "Uses sunrise and sunset when location access is granted. Falls back to custom times otherwise."
+                    WallpaperScheduleMode.FIXED ->
+                        DaySlot.values().joinToString(separator = " → ") { slot ->
+                            "${slot.displayName} ${formatMinutes(settings.slotSchedules.getValue(slot))}"
+                        }
+                }
+                _state.value = SettingsState(
+                    scheduleMode = settings.scheduleMode,
+                    slots = slots,
+                    description = description,
+                )
             }
-            .launchIn(viewModelScope)
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        println("SettingsViewModel clear vm=${System.identityHashCode(this)}, bus=${System.identityHashCode(screenBus)}")
-    }
-
-    override fun onNativeSelected(language: String) {
-        viewModelScope.launch {
-            repo.updateNative(language)
-            screenBus.send("Native language changed to $language")
         }
     }
 
-    override fun onLearningSelected(language: String) {
+    override fun onScheduleModeSelected(mode: WallpaperScheduleMode) {
+        viewModelScope.launch { repository.setScheduleMode(mode) }
+    }
+
+    override fun onSlotTimeSelected(slot: DaySlot, minutes: Int) {
+        viewModelScope.launch { repository.setStartMinutes(slot, minutes) }
+    }
+
+    override fun onResetDefaults() {
         viewModelScope.launch {
-            repo.updateLearning(language)
-            screenBus.send("Learning language changed to $language")
+            defaultSlotSchedule.forEach { (slot, minutes) ->
+                repository.setStartMinutes(slot, minutes)
+            }
         }
     }
 
-    override fun initOnce(params: Unit?) {
+    override fun initOnce(params: Unit?) = Unit
+
+    private fun formatMinutes(minutes: Int): String {
+        val normalized = ((minutes % (24 * 60)) + (24 * 60)) % (24 * 60)
+        val time = LocalTime.of(normalized / 60, normalized % 60)
+        return time.format(formatter)
     }
 
     @AssistedFactory
@@ -77,11 +92,26 @@ class SettingsViewModel @AssistedInject constructor(
 }
 
 @Module
-@InstallIn(ScreenComponent::class)
-abstract class SettingsVmBindingModule {
+@InstallIn(SingletonComponent::class)
+object SettingsPresenterModule {
+    @Provides
+    @IntoMap
+    @ClassKey(SettingsPresenter::class)
+    fun provideSettingsPresenter(): PresenterProvider<*> {
+        return object : PresenterProvider<SettingsPresenter> {
+            @Composable
+            override fun provide(key: String?): SettingsPresenter {
+                return scopedViewModel<SettingsViewModel>(key)
+            }
+        }
+    }
+}
 
+@Module
+@InstallIn(ScreenComponent::class)
+abstract class SettingsBindingModule {
     @Binds
     @IntoMap
     @VmKey(SettingsViewModel::class)
-    abstract fun settingsFactory(f: SettingsViewModel.Factory): AssistedVmFactory<out ViewModel>
+    abstract fun settingsFactory(factory: SettingsViewModel.Factory): AssistedVmFactory<out ViewModel>
 }

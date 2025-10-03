@@ -46,9 +46,6 @@ dependencies {
   implementation(project(":feature:catalog:api"))
   implementation(project(":feature:catalog:ui"))
   implementation(project(":feature:catalog:impl"))
-  implementation(project(":feature:detail:api"))
-  implementation(project(":feature:detail:ui"))
-  implementation(project(":feature:detail:impl"))
   implementation(project(":feature:settings:api"))
   implementation(project(":feature:settings:ui"))
   implementation(project(":feature:settings:impl"))
@@ -62,6 +59,7 @@ dependencies {
   implementation(libs.lifecycle.runtime.compose)
   implementation(libs.lifecycle.viewmodel.compose)
   implementation(libs.navigation.compose)
+  implementation(libs.media3.exoplayer)
 
   implementation(libs.hilt.android)
   ksp(libs.hilt.compiler)

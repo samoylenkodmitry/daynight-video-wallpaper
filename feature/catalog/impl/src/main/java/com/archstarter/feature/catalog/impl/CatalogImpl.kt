@@ -1,118 +1,144 @@
 package com.archstarter.feature.catalog.impl
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.archstarter.core.common.app.App
 import com.archstarter.core.common.presenter.PresenterProvider
-import com.archstarter.core.common.scope.ScreenBus
 import com.archstarter.core.common.scope.ScreenComponent
 import com.archstarter.core.common.viewmodel.AssistedVmFactory
 import com.archstarter.core.common.viewmodel.VmKey
 import com.archstarter.core.common.viewmodel.scopedViewModel
-import com.archstarter.feature.catalog.api.CatalogPresenter
-import com.archstarter.feature.catalog.api.CatalogState
-import com.archstarter.feature.catalog.impl.data.ArticleRepo
+import com.archstarter.core.common.wallpaper.DaySlot
+import com.archstarter.core.common.wallpaper.WallpaperPreferencesRepository
+import com.archstarter.core.common.wallpaper.WallpaperScheduleMode
+import com.archstarter.core.common.wallpaper.WallpaperSettings
+import com.archstarter.feature.catalog.api.SlotCardState
+import com.archstarter.feature.catalog.api.WallpaperHomePresenter
+import com.archstarter.feature.catalog.api.WallpaperHomeState
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
-import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
-class CatalogViewModel @AssistedInject constructor(
-    private val repo: ArticleRepo,
+class WallpaperHomeViewModel @AssistedInject constructor(
     private val app: App,
-    private val bridge: CatalogBridge,
-    private val screenBus: ScreenBus, // from Screen/Subscreen (inherited)
-    @Assisted private val handle: SavedStateHandle
-) : ViewModel(), CatalogPresenter {
-    private val _state = MutableStateFlow(CatalogState())
-    override val state: StateFlow<CatalogState> = _state
+    private val repository: WallpaperPreferencesRepository,
+) : ViewModel(), WallpaperHomePresenter {
+    private val formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
 
-    val busText = screenBus.text.stateIn(viewModelScope, SharingStarted.Eagerly, screenBus.text.value)
+    private val _state = MutableStateFlow(WallpaperHomeState(isLoading = true))
+    override val state: StateFlow<WallpaperHomeState> = _state
 
     init {
-        println("CatalogViewModel created vm=${System.identityHashCode(this)}, bus=${System.identityHashCode(screenBus)}")
-        bridge.setDelegate(this)
-        val articles = repo.articles
-        articles
-            .onEach { list ->
-                _state.update { current ->
-                    current.copy(items = list.map { it.id })
-                }
-            }
-            .launchIn(viewModelScope)
         viewModelScope.launch {
-            val hasArticles = articles.first().isNotEmpty()
-            if (!hasArticles) {
-                _state.update { it.copy(isRefreshing = true) }
-                try {
-                    repeat(10) { repo.refresh() }
-                } finally {
-                    _state.update { it.copy(isRefreshing = false) }
-                }
+            repository.settings.collect { settings ->
+                _state.value = toState(settings)
             }
         }
     }
-    override fun onCleared() {
-        super.onCleared()
-        println("CatalogViewModel clear vm=${System.identityHashCode(this)}, bus=${System.identityHashCode(screenBus)}")
+
+    override fun onPickVideo(slot: DaySlot, uri: Uri) {
+        viewModelScope.launch { repository.setVideo(slot, uri) }
     }
 
-    override fun onRefresh() {
-        if (_state.value.isRefreshing) return
-        viewModelScope.launch {
-            _state.update { it.copy(isRefreshing = true) }
-            try {
-                repo.refresh()
-            } finally {
-                _state.update { it.copy(isRefreshing = false) }
-            }
-        }
-        screenBus.send("Catalog refreshed at ${System.currentTimeMillis()}")
+    override fun onRemoveVideo(slot: DaySlot) {
+        viewModelScope.launch { repository.clearVideo(slot) }
     }
 
-    override fun onSettingsClick() {
+    override fun onToggleMute() {
+        val current = state.value
+        viewModelScope.launch { repository.setMute(!current.mutePlayback) }
+    }
+
+    override fun onToggleLoop() {
+        val current = state.value
+        viewModelScope.launch { repository.setLoop(!current.loopPlayback) }
+    }
+
+    override fun onOpenSettings() {
         app.navigation.openSettings()
     }
 
-    override fun onItemClick(id: Int) {
-        app.navigation.openDetail(id)
+    override fun onSetWallpaper() {
+        app.navigation.openWallpaperPreview()
     }
 
-    override fun initOnce(params: Unit?) {
+    override fun initOnce(params: Unit?) = Unit
+
+    private fun toState(settings: WallpaperSettings): WallpaperHomeState {
+        val slots = DaySlot.values().map { slot ->
+            val config = settings.slotConfigurations[slot]
+            val description = when (settings.scheduleMode) {
+                WallpaperScheduleMode.SOLAR -> solarDescription(slot)
+                WallpaperScheduleMode.FIXED -> "Starts at ${formatMinutes(settings.slotSchedules.getValue(slot))}"
+            }
+            SlotCardState(
+                slot = slot,
+                title = slot.displayName,
+                videoLabel = config?.videoLabel,
+                description = description,
+            )
+        }
+        val summary = when (settings.scheduleMode) {
+            WallpaperScheduleMode.SOLAR ->
+                "Matches sunrise and sunset when location access is available. Falls back to your fixed times otherwise."
+            WallpaperScheduleMode.FIXED ->
+                DaySlot.values().joinToString(separator = " → ") { slot ->
+                    "${slot.displayName} ${formatMinutes(settings.slotSchedules.getValue(slot))}"
+                }
+        }
+        return WallpaperHomeState(
+            slots = slots,
+            scheduleMode = settings.scheduleMode,
+            scheduleSummary = summary,
+            mutePlayback = settings.mutePlayback,
+            loopPlayback = settings.loopPlayback,
+            isLoading = false,
+        )
+    }
+
+    private fun formatMinutes(minutes: Int): String {
+        val normalized = ((minutes % (24 * 60)) + (24 * 60)) % (24 * 60)
+        val time = LocalTime.of(normalized / 60, normalized % 60)
+        return time.format(formatter)
+    }
+
+    private fun solarDescription(slot: DaySlot): String = when (slot) {
+        DaySlot.MORNING -> "Begins at civil dawn"
+        DaySlot.DAY -> "Runs from sunrise to sunset"
+        DaySlot.EVENING -> "Follows sunset through twilight"
+        DaySlot.NIGHT -> "Covers the darkest hours"
     }
 
     @AssistedFactory
-    interface Factory : AssistedVmFactory<CatalogViewModel>
+    interface Factory : AssistedVmFactory<WallpaperHomeViewModel>
 }
 
 @Module
 @InstallIn(SingletonComponent::class)
-object CatalogBindings {
+object WallpaperHomeBindings {
     @Provides
     @IntoMap
-    @ClassKey(CatalogPresenter::class)
-    fun provideCatalogProvider(): PresenterProvider<*> {
-        return object : PresenterProvider<CatalogPresenter> {
+    @ClassKey(WallpaperHomePresenter::class)
+    fun provideWallpaperHomePresenter(): PresenterProvider<*> {
+        return object : PresenterProvider<WallpaperHomePresenter> {
             @Composable
-            override fun provide(key: String?): CatalogPresenter {
-                return scopedViewModel<CatalogViewModel>(key)
+            override fun provide(key: String?): WallpaperHomePresenter {
+                return scopedViewModel<WallpaperHomeViewModel>(key)
             }
         }
     }
@@ -120,10 +146,9 @@ object CatalogBindings {
 
 @Module
 @InstallIn(ScreenComponent::class)
-abstract class CatalogBindingModule {
-
+abstract class WallpaperHomeBindingModule {
     @Binds
     @IntoMap
-    @VmKey(CatalogViewModel::class)
-    abstract fun catalogFactory(f: CatalogViewModel.Factory): AssistedVmFactory<out ViewModel>
+    @VmKey(WallpaperHomeViewModel::class)
+    abstract fun wallpaperHomeFactory(factory: WallpaperHomeViewModel.Factory): AssistedVmFactory<out ViewModel>
 }
