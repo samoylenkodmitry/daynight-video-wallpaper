@@ -20,17 +20,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import com.archstarter.core.common.app.App
 import com.archstarter.core.common.presenter.LocalPresenterResolver
 import com.archstarter.core.common.scope.LocalScreenBuilder
 import com.archstarter.core.common.scope.ScreenComponent
 import com.archstarter.core.common.scope.ScreenScope
 import com.archstarter.core.designsystem.AppTheme
-import com.archstarter.feature.catalog.api.Catalog
-import com.archstarter.feature.catalog.ui.CatalogScreen
-import com.archstarter.feature.detail.api.Detail
-import com.archstarter.feature.detail.ui.DetailScreen
+import com.archstarter.feature.catalog.api.WallpaperHome
+import com.archstarter.feature.catalog.ui.WallpaperHomeScreen
 import com.archstarter.feature.onboarding.api.Onboarding
 import com.archstarter.feature.onboarding.api.OnboardingStatusProvider
 import com.archstarter.feature.onboarding.ui.OnboardingScreen
@@ -73,7 +70,7 @@ class MainActivity : ComponentActivity() {
                     val onboardingCompleted by onboardingStatus.hasCompleted.collectAsStateWithLifecycle(initialValue = null)
                     val startDestinationState = remember { mutableStateOf<Any?>(null) }
                     if (startDestinationState.value == null && onboardingCompleted != null) {
-                        startDestinationState.value = if (onboardingCompleted == true) Catalog else Onboarding
+                        startDestinationState.value = if (onboardingCompleted == true) WallpaperHome else Onboarding
                     }
                     Box(
                         modifier = Modifier
@@ -89,7 +86,7 @@ class MainActivity : ComponentActivity() {
                                 nav = nav,
                                 startDestination = startDestination,
                                 onOnboardingFinished = {
-                                    nav.navigate(Catalog) {
+                                    nav.navigate(WallpaperHome) {
                                         popUpTo(Onboarding) { inclusive = true }
                                         launchSingleTop = true
                                     }
@@ -115,15 +112,9 @@ fun AppNavHost(
                 OnboardingScreen(onFinished = onOnboardingFinished)
             }
         }
-        composable<Catalog> {
+        composable<WallpaperHome> {
             ScreenScope {
-                CatalogScreen()
-            }
-        }
-        composable<Detail> {
-            val args = it.toRoute<Detail>()
-            ScreenScope {
-                DetailScreen(args.id)
+                WallpaperHomeScreen()
             }
         }
         composable<Settings> {

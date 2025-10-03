@@ -20,7 +20,6 @@ android {
 dependencies {
   implementation(project(":feature:settings:api"))
   implementation(project(":core:common"))
-  implementation(libs.androidx.datastore.preferences)
 
   implementation(libs.hilt.android)
   ksp(libs.hilt.compiler)

@@ -34,9 +34,9 @@ import com.archstarter.core.common.presenter.MocksMap
 import com.archstarter.core.common.presenter.PresenterMockKey
 import com.archstarter.core.common.presenter.rememberPresenter
 import com.archstarter.core.designsystem.AppTheme
-import com.archstarter.feature.onboarding.api.OnboardingPage
 import com.archstarter.feature.onboarding.api.OnboardingPresenter
 import com.archstarter.feature.onboarding.api.OnboardingState
+import com.archstarter.feature.onboarding.api.DefaultOnboardingPages
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -170,11 +170,7 @@ private object OnboardingPresenterMocks {
 }
 
 private class FakeOnboardingPresenter : OnboardingPresenter {
-    private val pages = listOf(
-        OnboardingPage(title = "Welcome", message = "Explore the catalog with ease."),
-        OnboardingPage(title = "Learn", message = "Tap any item to read detailed information."),
-        OnboardingPage(title = "Enjoy", message = "Pick favorites and personalize your feed."),
-    )
+    private val pages = DefaultOnboardingPages
     private val _state = MutableStateFlow(OnboardingState(completed = false, pages = pages))
     override val state: StateFlow<OnboardingState> = _state
 

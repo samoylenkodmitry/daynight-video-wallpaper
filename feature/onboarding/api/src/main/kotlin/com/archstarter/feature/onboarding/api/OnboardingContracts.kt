@@ -11,20 +11,20 @@ data class OnboardingPage(val title: String, val message: String)
 
 val DefaultOnboardingPages = listOf(
     OnboardingPage(
-        title = "Pick your pair",
-        message = "Choose your from and to languages in Settings."
+        title = "Welcome to DayNight",
+        message = "Assign a unique video to every part of the day and create a living wallpaper that changes with time."
     ),
     OnboardingPage(
-        title = "Refresh stories",
-        message = "Press refresh to grab a random article."
+        title = "Set the schedule",
+        message = "Use solar events or define custom start times for morning, day, evening and night."
     ),
     OnboardingPage(
-        title = "Open and read",
-        message = "Tap any card to open the full story."
+        title = "Pick your ambience",
+        message = "Choose immersive clips from your library. We'll loop them smoothly and keep the audio muted by default."
     ),
     OnboardingPage(
-        title = "Tap to translate",
-        message = "Touch a word to see it in your learning language."
+        title = "Apply the wallpaper",
+        message = "When you're ready, tap Set Live Wallpaper on the home screen to preview and apply DayNight."
     )
 )
 
