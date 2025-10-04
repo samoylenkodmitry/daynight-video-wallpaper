@@ -14,6 +14,7 @@ data class SlotCardState(
     val slot: DaySlot,
     val title: String,
     val videoLabel: String?,
+    val videoUri: Uri?,
     val description: String,
 )
 

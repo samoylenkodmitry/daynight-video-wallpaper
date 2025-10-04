@@ -94,6 +94,7 @@ class WallpaperHomeViewModel @AssistedInject constructor(
                 slot = slot,
                 title = slot.displayName,
                 videoLabel = config?.videoLabel,
+                videoUri = config?.videoUri,
                 description = description,
             )
         }
