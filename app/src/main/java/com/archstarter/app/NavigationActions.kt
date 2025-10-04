@@ -13,7 +13,9 @@ class NavigationActions(
 ) : NavigationActionsApi {
 
     override fun openSettings() {
-        navController.navigate(Settings)
+        navController.navigate(Settings) {
+            launchSingleTop = true
+        }
     }
 
     override fun openLink(url: String) {
