@@ -104,16 +104,12 @@ class WallpaperPreferencesRepository @Inject constructor(
     }
 
     private fun persistUriPermission(uri: Uri) {
-        val flags = IntentFlags.READ_PERSISTABLE
         runCatching {
-            context.contentResolver.takePersistableUriPermission(uri, flags)
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION,
+            )
         }
-    }
-
-    private object IntentFlags {
-        const val READ_PERSISTABLE =
-            android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                android.content.Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
     }
 
     private fun slotKey(slot: DaySlot) = stringPreferencesKey("slot_${slot.name.lowercase()}")

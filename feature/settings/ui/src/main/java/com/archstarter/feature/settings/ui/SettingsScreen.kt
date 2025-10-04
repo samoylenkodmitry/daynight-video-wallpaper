@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -22,6 +23,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +50,7 @@ fun SettingsScreen(onExit: () -> Unit = {}) {
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 private fun SettingsContent(
     state: SettingsState,
     presenter: SettingsPresenter,
@@ -57,12 +60,14 @@ private fun SettingsContent(
     val formatter = remember { DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault()) }
 
     editingSlot?.let { slot ->
-        val timeState = remember(slot) {
-            rememberTimePickerState(
-                initialHour = slot.startMinutes / 60,
-                initialMinute = slot.startMinutes % 60,
-                is24Hour = false,
-            )
+        val timeState = rememberTimePickerState(
+            initialHour = slot.startMinutes / 60,
+            initialMinute = slot.startMinutes % 60,
+            is24Hour = false,
+        )
+        LaunchedEffect(slot) {
+            timeState.hour = slot.startMinutes / 60
+            timeState.minute = slot.startMinutes % 60
         }
         AlertDialog(
             onDismissRequest = { editingSlot = null },

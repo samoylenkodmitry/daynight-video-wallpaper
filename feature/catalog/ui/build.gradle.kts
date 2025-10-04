@@ -25,6 +25,7 @@ dependencies {
   implementation(project(":core:designsystem"))
   implementation(project(":core:common"))
 
+  implementation(libs.activity.compose)
   implementation(libs.compose.ui)
   implementation(libs.compose.material3)
   implementation(libs.compose.preview)
