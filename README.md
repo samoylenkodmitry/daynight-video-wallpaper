@@ -2,6 +2,11 @@
 
 DayNight Video Wallpaper turns your Android home screen into a living canvas that transitions throughout the day. Assign videos for morning, day, evening and night, pick whether playback follows solar events or custom times, and apply the live wallpaper with a single tap.
 
+[live_video_wallpaper.webm](https://github.com/user-attachments/assets/b220c625-c18c-4d4f-89af-b5de850889b9)
+
+<img width="1280" height="2856" alt="scr1" src="https://github.com/user-attachments/assets/d8f59d93-91f3-48c3-ba6c-18362ef34e79" />
+<img width="1280" height="2856" alt="scr4" src="https://github.com/user-attachments/assets/4330eb99-7d20-4f6e-b1f2-efbfd3bf90b4" />
+
 ## Highlights
 - **Time-aware playback.** Choose between a solar-aware schedule (sunrise/sunset when available) or fixed start times for each part of the day.
 - **Personal video loops.** Select any video on your device for each slot. DayNight remembers URI permissions and loops clips seamlessly.
