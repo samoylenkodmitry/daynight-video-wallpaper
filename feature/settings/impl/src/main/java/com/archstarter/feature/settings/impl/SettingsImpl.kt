@@ -1,6 +1,7 @@
 package com.archstarter.feature.settings.impl
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.archstarter.core.common.presenter.PresenterProvider
@@ -18,6 +19,7 @@ import com.archstarter.feature.settings.api.SettingsState
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
+import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
@@ -32,7 +34,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
+@Suppress("UnusedPrivateMember")
 class SettingsViewModel @AssistedInject constructor(
+    @Assisted private val savedStateHandle: SavedStateHandle,
     private val repository: WallpaperPreferencesRepository,
 ) : ViewModel(), SettingsPresenter {
     private val formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())

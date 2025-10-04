@@ -1,7 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.archstarter.app">
 
-    <uses-permission android:name="android.permission.BIND_WALLPAPER" />
+    <uses-permission
+        android:name="android.permission.BIND_WALLPAPER"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 
     <application

@@ -2,6 +2,7 @@ package com.archstarter.feature.catalog.impl
 
 import android.net.Uri
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.archstarter.core.common.app.App
@@ -20,6 +21,7 @@ import com.archstarter.feature.catalog.api.WallpaperHomeState
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
+import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.InstallIn
@@ -34,7 +36,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
+@Suppress("UnusedPrivateMember")
 class WallpaperHomeViewModel @AssistedInject constructor(
+    @Assisted private val savedStateHandle: SavedStateHandle,
     private val app: App,
     private val repository: WallpaperPreferencesRepository,
 ) : ViewModel(), WallpaperHomePresenter {
