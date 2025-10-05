@@ -12,6 +12,7 @@ import com.archstarter.core.common.viewmodel.AssistedVmFactory
 import com.archstarter.core.common.viewmodel.VmKey
 import com.archstarter.core.common.viewmodel.scopedViewModel
 import com.archstarter.core.common.wallpaper.DaySlot
+import com.archstarter.core.common.wallpaper.RotationInterval
 import com.archstarter.core.common.wallpaper.WallpaperPreferencesRepository
 import com.archstarter.core.common.wallpaper.WallpaperScheduleMode
 import com.archstarter.core.common.wallpaper.WallpaperSettings
@@ -89,6 +90,7 @@ class WallpaperHomeViewModel @AssistedInject constructor(
             val description = when (settings.scheduleMode) {
                 WallpaperScheduleMode.SOLAR -> solarDescription(slot)
                 WallpaperScheduleMode.FIXED -> "Starts at ${formatMinutes(settings.slotSchedules.getValue(slot))}"
+                WallpaperScheduleMode.ROTATING -> "Part of a rotation that advances every ${formatRotation(settings.rotationInterval)}"
             }
             SlotCardState(
                 slot = slot,
@@ -105,6 +107,8 @@ class WallpaperHomeViewModel @AssistedInject constructor(
                 DaySlot.values().joinToString(separator = " → ") { slot ->
                     "${slot.displayName} ${formatMinutes(settings.slotSchedules.getValue(slot))}"
                 }
+            WallpaperScheduleMode.ROTATING ->
+                "Cycles through Morning → Day → Evening → Night every ${formatRotation(settings.rotationInterval)}"
         }
         return WallpaperHomeState(
             slots = slots,
@@ -127,6 +131,11 @@ class WallpaperHomeViewModel @AssistedInject constructor(
         DaySlot.DAY -> "Runs from sunrise to sunset"
         DaySlot.EVENING -> "Follows sunset through twilight"
         DaySlot.NIGHT -> "Covers the darkest hours"
+    }
+
+    private fun formatRotation(interval: RotationInterval): String {
+        val plural = if (interval.value == 1) interval.unit.displayName.dropLast(1) else interval.unit.displayName
+        return "${interval.value} $plural"
     }
 
     @AssistedFactory
