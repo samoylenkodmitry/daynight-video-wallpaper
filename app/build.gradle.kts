@@ -53,6 +53,7 @@ dependencies {
   implementation(libs.activity.compose)
   implementation(libs.compose.ui)
   implementation(libs.compose.material3)
+  implementation(libs.material)
   implementation(libs.compose.preview)
   debugImplementation(libs.compose.tooling)
 
