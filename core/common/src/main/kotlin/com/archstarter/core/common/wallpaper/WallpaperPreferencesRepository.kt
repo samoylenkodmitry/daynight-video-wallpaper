@@ -47,6 +47,15 @@ class WallpaperPreferencesRepository @Inject constructor(
             val schedules = DaySlot.values().associateWith { slot ->
                 preferences[startKey(slot)] ?: defaultSlotSchedule.getValue(slot)
             }
+            val rotationValue = preferences[ROTATION_VALUE_KEY] ?: RotationInterval().value
+            val rotationUnit = preferences[ROTATION_UNIT_KEY]?.let { stored ->
+                runCatching { RotationIntervalUnit.valueOf(stored) }
+                    .getOrNull() ?: RotationIntervalUnit.HOURS
+            } ?: RotationIntervalUnit.HOURS
+            val rotationInterval = RotationInterval(
+                value = rotationValue.coerceIn(1, 999),
+                unit = rotationUnit,
+            )
             val configs = DaySlot.values().associateWith { slot ->
                 val uri = preferences[slotKey(slot)]?.let { Uri.parse(it) }
                 SlotConfiguration(slot, uri)
@@ -55,6 +64,7 @@ class WallpaperPreferencesRepository @Inject constructor(
                 scheduleMode = scheduleMode,
                 slotConfigurations = configs,
                 slotSchedules = schedules,
+                rotationInterval = rotationInterval,
                 mutePlayback = mute,
                 loopPlayback = loop,
             )
@@ -97,6 +107,18 @@ class WallpaperPreferencesRepository @Inject constructor(
         }
     }
 
+    suspend fun setRotationIntervalValue(value: Int) {
+        dataStore.edit { prefs ->
+            prefs[ROTATION_VALUE_KEY] = value.coerceIn(1, 999)
+        }
+    }
+
+    suspend fun setRotationIntervalUnit(unit: RotationIntervalUnit) {
+        dataStore.edit { prefs ->
+            prefs[ROTATION_UNIT_KEY] = unit.name
+        }
+    }
+
     suspend fun setStartMinutes(slot: DaySlot, minutes: Int) {
         dataStore.edit { prefs ->
             prefs[startKey(slot)] = minutes.coerceIn(0, 24 * 60 - 1)
@@ -119,5 +141,7 @@ class WallpaperPreferencesRepository @Inject constructor(
         val SCHEDULE_MODE_KEY = stringPreferencesKey("schedule_mode")
         val MUTE_KEY = booleanPreferencesKey("mute")
         val LOOP_KEY = booleanPreferencesKey("loop")
+        val ROTATION_VALUE_KEY = intPreferencesKey("rotation_value")
+        val ROTATION_UNIT_KEY = stringPreferencesKey("rotation_unit")
     }
 }

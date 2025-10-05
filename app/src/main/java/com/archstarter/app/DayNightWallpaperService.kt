@@ -20,6 +20,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalTime
 
 @AndroidEntryPoint
@@ -108,13 +109,24 @@ class DayNightWallpaperService : WallpaperService() {
         private fun computeSlot(settings: WallpaperSettings): DaySlot {
             val now = LocalTime.now()
             val minutes = now.hour * 60 + now.minute
-            val schedule = when (settings.scheduleMode) {
-                WallpaperScheduleMode.SOLAR -> defaultSlotSchedule
-                WallpaperScheduleMode.FIXED -> settings.slotSchedules
+            return when (settings.scheduleMode) {
+                WallpaperScheduleMode.SOLAR -> {
+                    val schedule = defaultSlotSchedule
+                    val ordered = DaySlot.values().sortedBy { schedule.getValue(it) }
+                    ordered.lastOrNull { schedule.getValue(it) <= minutes } ?: ordered.last()
+                }
+                WallpaperScheduleMode.FIXED -> {
+                    val schedule = settings.slotSchedules
+                    val ordered = DaySlot.values().sortedBy { schedule.getValue(it) }
+                    ordered.lastOrNull { schedule.getValue(it) <= minutes } ?: ordered.last()
+                }
+                WallpaperScheduleMode.ROTATING -> {
+                    val intervalMinutes = settings.rotationInterval.minutes.coerceAtLeast(1)
+                    val elapsedMinutes = Instant.now().epochSecond / 60
+                    val slotIndex = ((elapsedMinutes / intervalMinutes) % DaySlot.values().size).toInt()
+                    DaySlot.values()[slotIndex]
+                }
             }
-            val ordered = DaySlot.values().sortedBy { schedule.getValue(it) }
-            return ordered.lastOrNull { schedule.getValue(it) <= minutes }
-                ?: ordered.last()
         }
     }
 }

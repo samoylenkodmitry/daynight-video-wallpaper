@@ -34,6 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.archstarter.core.common.presenter.rememberPresenter
+import com.archstarter.core.common.wallpaper.RotationIntervalUnit
+import com.archstarter.feature.settings.api.RotationIntervalUi
 import com.archstarter.feature.settings.api.ScheduleSlotUi
 import com.archstarter.feature.settings.api.SettingsPresenter
 import com.archstarter.feature.settings.api.SettingsState
@@ -129,12 +131,13 @@ private fun SettingsContent(
             ) {
                 Text("Schedule details", style = MaterialTheme.typography.titleMedium)
                 Text(state.description, style = MaterialTheme.typography.bodyMedium)
-                if (state.scheduleMode == WallpaperScheduleMode.FIXED) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(state.slots, key = { it.slot }) { slot ->
+                when (state.scheduleMode) {
+                    WallpaperScheduleMode.FIXED -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            items(state.slots, key = { it.slot }) { slot ->
                             SlotRow(
                                 slot = slot,
                                 formatter = formatter,
@@ -146,6 +149,15 @@ private fun SettingsContent(
                     TextButton(onClick = presenter::onResetDefaults) {
                         Text("Reset to recommended times")
                     }
+                    }
+                    WallpaperScheduleMode.ROTATING -> {
+                        RotationIntervalPicker(
+                            interval = state.rotationInterval,
+                            onValueChange = presenter::onRotationIntervalValueChanged,
+                            onUnitSelected = presenter::onRotationIntervalUnitSelected,
+                        )
+                    }
+                    WallpaperScheduleMode.SOLAR -> Unit
                 }
             }
         }
@@ -170,6 +182,11 @@ private fun ModePicker(
             onClick = { onSelected(WallpaperScheduleMode.FIXED) },
             label = { Text("Custom times") },
         )
+        FilterChip(
+            selected = selected == WallpaperScheduleMode.ROTATING,
+            onClick = { onSelected(WallpaperScheduleMode.ROTATING) },
+            label = { Text("Rotate on timer") },
+        )
     }
 }
 
@@ -190,6 +207,48 @@ private fun SlotRow(
             Text(formatted.value, style = MaterialTheme.typography.bodyMedium)
         }
         Button(onClick = onEdit) { Text("Change") }
+    }
+}
+
+@Composable
+private fun RotationIntervalPicker(
+    interval: RotationIntervalUi,
+    onValueChange: (Int) -> Unit,
+    onUnitSelected: (RotationIntervalUnit) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Rotate every", style = MaterialTheme.typography.titleSmall)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            OutlinedButton(
+                onClick = { onValueChange((interval.value - 1).coerceAtLeast(1)) },
+                enabled = interval.value > 1,
+            ) { Text("-") }
+            Text(
+                text = interval.value.toString(),
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            OutlinedButton(
+                onClick = {
+                    val next = interval.value + 1
+                    onValueChange(next.coerceAtMost(999))
+                },
+            ) { Text("+") }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            RotationIntervalUnit.values().forEach { unit ->
+                FilterChip(
+                    selected = interval.unit == unit,
+                    onClick = { onUnitSelected(unit) },
+                    label = {
+                        val label = if (interval.value == 1) unit.displayName.dropLast(1) else unit.displayName
+                        Text(label.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() })
+                    },
+                )
+            }
+        }
     }
 }
 

@@ -10,10 +10,13 @@ import com.archstarter.core.common.viewmodel.AssistedVmFactory
 import com.archstarter.core.common.viewmodel.VmKey
 import com.archstarter.core.common.viewmodel.scopedViewModel
 import com.archstarter.core.common.wallpaper.DaySlot
+import com.archstarter.core.common.wallpaper.RotationInterval
+import com.archstarter.core.common.wallpaper.RotationIntervalUnit
 import com.archstarter.core.common.wallpaper.WallpaperPreferencesRepository
 import com.archstarter.core.common.wallpaper.WallpaperScheduleMode
 import com.archstarter.core.common.wallpaper.defaultSlotSchedule
 import com.archstarter.feature.settings.api.ScheduleSlotUi
+import com.archstarter.feature.settings.api.RotationIntervalUi
 import com.archstarter.feature.settings.api.SettingsPresenter
 import com.archstarter.feature.settings.api.SettingsState
 import dagger.Binds
@@ -57,11 +60,17 @@ class SettingsViewModel @AssistedInject constructor(
                         DaySlot.values().joinToString(separator = " → ") { slot ->
                             "${slot.displayName} ${formatMinutes(settings.slotSchedules.getValue(slot))}"
                         }
+                    WallpaperScheduleMode.ROTATING ->
+                        "Cycles through Morning → Day → Evening → Night every ${formatRotation(settings.rotationInterval)}."
                 }
                 _state.value = SettingsState(
                     scheduleMode = settings.scheduleMode,
                     slots = slots,
                     description = description,
+                    rotationInterval = RotationIntervalUi(
+                        value = settings.rotationInterval.value,
+                        unit = settings.rotationInterval.unit,
+                    ),
                 )
             }
         }
@@ -83,12 +92,27 @@ class SettingsViewModel @AssistedInject constructor(
         }
     }
 
+    override fun onRotationIntervalValueChanged(value: Int) {
+        viewModelScope.launch {
+            repository.setRotationIntervalValue(value.coerceIn(1, 999))
+        }
+    }
+
+    override fun onRotationIntervalUnitSelected(unit: RotationIntervalUnit) {
+        viewModelScope.launch { repository.setRotationIntervalUnit(unit) }
+    }
+
     override fun initOnce(params: Unit?) = Unit
 
     private fun formatMinutes(minutes: Int): String {
         val normalized = ((minutes % (24 * 60)) + (24 * 60)) % (24 * 60)
         val time = LocalTime.of(normalized / 60, normalized % 60)
         return time.format(formatter)
+    }
+
+    private fun formatRotation(interval: RotationInterval): String {
+        val plural = if (interval.value == 1) interval.unit.displayName.dropLast(1) else interval.unit.displayName
+        return "${interval.value} $plural"
     }
 
     @AssistedFactory

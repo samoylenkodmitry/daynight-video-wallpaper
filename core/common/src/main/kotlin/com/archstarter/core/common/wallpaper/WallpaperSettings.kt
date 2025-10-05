@@ -28,6 +28,7 @@ data class WallpaperSettings(
     val scheduleMode: WallpaperScheduleMode = WallpaperScheduleMode.SOLAR,
     val slotConfigurations: Map<DaySlot, SlotConfiguration> = DaySlot.values().associateWith { SlotConfiguration(it, null) },
     val slotSchedules: Map<DaySlot, Int> = defaultSlotSchedule,
+    val rotationInterval: RotationInterval = RotationInterval(),
     val mutePlayback: Boolean = true,
     val loopPlayback: Boolean = true,
 ) {
