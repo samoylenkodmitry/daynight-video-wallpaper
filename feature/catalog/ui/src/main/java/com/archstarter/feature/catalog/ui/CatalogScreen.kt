@@ -6,6 +6,7 @@ import android.net.Uri
 import android.widget.VideoView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -67,84 +68,83 @@ private fun WallpaperHomeContent(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 24.dp),
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(
-            text = "DayNight Video Wallpaper",
-            style = MaterialTheme.typography.headlineSmall,
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = "Assign immersive videos to each part of the day and let them fade in as time moves.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(24.dp))
-        LazyColumn(
-            modifier = Modifier.weight(1f, fill = true),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            items(state.slots, key = { it.slot }) { slotState ->
-                SlotCard(
-                    state = slotState,
-                    onPick = {
-                        pendingSlot = slotState.slot
-                        videoPicker.launch(arrayOf("video/*"))
-                    },
-                    onRemove = { presenter.onRemoveVideo(slotState.slot) },
+        item {
+            Column {
+                Text(
+                    text = "DayNight Video Wallpaper",
+                    style = MaterialTheme.typography.headlineSmall,
                 )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Assign immersive videos to each part of the day and let them fade in as time moves.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(8.dp))
             }
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        }
+        items(state.slots, key = { it.slot }) { slotState ->
+            SlotCard(
+                state = slotState,
+                onPick = {
+                    pendingSlot = slotState.slot
+                    videoPicker.launch(arrayOf("video/*"))
+                },
+                onRemove = { presenter.onRemoveVideo(slotState.slot) },
+            )
+        }
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        Text("Playback")
-                        ToggleRow(
-                            title = "Mute audio",
-                            checked = state.mutePlayback,
-                            onToggle = { presenter.onToggleMute() },
-                        )
-                        ToggleRow(
-                            title = "Loop videos",
-                            checked = state.loopPlayback,
-                            onToggle = { presenter.onToggleLoop() },
-                        )
-                    }
+                    Text("Playback")
+                    ToggleRow(
+                        title = "Mute audio",
+                        checked = state.mutePlayback,
+                        onToggle = { presenter.onToggleMute() },
+                    )
+                    ToggleRow(
+                        title = "Loop videos",
+                        checked = state.loopPlayback,
+                        onToggle = { presenter.onToggleLoop() },
+                    )
                 }
             }
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
+        }
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    Text("Schedule", style = MaterialTheme.typography.titleMedium)
+                    Text(state.scheduleSummary, style = MaterialTheme.typography.bodyMedium)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text("Schedule", style = MaterialTheme.typography.titleMedium)
-                        Text(state.scheduleSummary, style = MaterialTheme.typography.bodyMedium)
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Button(onClick = presenter::onOpenSettings) {
-                                Text("Adjust schedule")
-                            }
-                            TextButton(onClick = presenter::onSetWallpaper) {
-                                Text("Set live wallpaper")
-                            }
+                        Button(onClick = presenter::onOpenSettings) {
+                            Text("Adjust schedule")
+                        }
+                        TextButton(onClick = presenter::onSetWallpaper) {
+                            Text("Set live wallpaper")
                         }
                     }
                 }
