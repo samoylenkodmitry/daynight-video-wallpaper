@@ -1,4 +1,4 @@
-package com.archstarter.app
+package com.dmitriisamoilenko.daynightwallpaper
 
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText

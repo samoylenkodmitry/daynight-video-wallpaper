@@ -6,7 +6,7 @@ This roadmap grows **android-compose-arch-starter** from an Android-only experie
 
 | Area | What exists today |
 | --- | --- |
-| Android entry point | `app/src/main/java/com/archstarter/app/MainActivity` drives `AppNavHost` with `androidx.navigation.compose` and wires presenters via `HiltPresenterResolver`, `AppScopeManager`, and the Hilt multibindings in `PresenterModule.kt`.
+| Android entry point | `app/src/main/java/com/dmitriisamoilenko/daynightwallpaper/MainActivity` drives `AppNavHost` with `androidx.navigation.compose` and wires presenters via `HiltPresenterResolver`, `AppScopeManager`, and the Hilt multibindings in `PresenterModule.kt`.
 | Presenter plumbing | `core/common` packages (`presenter/`, `scope/`, `app/`, `viewmodel/`) expose `ParamInit`, Hilt-friendly `PresenterProvider`, and Android `ViewModel` bridges such as `MagicViewModel` and `ScreenVmFactory`.
 | UI system | `core/designsystem/src/main/java/com/archstarter/core/designsystem/Theme.kt` and `LiquidGlass.kt` provide Compose theming, but the module is Android-only.
 | Feature split | Each feature keeps `api`, `ui`, and `impl` Android library modules. For example, `feature/catalog/ui/CatalogScreen.kt` consumes `collectAsStateWithLifecycle` while `feature/catalog/impl/data/ArticleRepository.kt` builds Retrofit + Room stacks and registers them through Hilt modules inside `CatalogImpl.kt`.

@@ -1,4 +1,4 @@
-package com.archstarter.app
+package com.dmitriisamoilenko.daynightwallpaper
 
 import android.service.wallpaper.WallpaperService
 import android.view.SurfaceHolder

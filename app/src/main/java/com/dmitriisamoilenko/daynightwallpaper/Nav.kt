@@ -1,4 +1,4 @@
-package com.archstarter.app
+package com.dmitriisamoilenko.daynightwallpaper
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
