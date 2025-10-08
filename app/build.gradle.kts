@@ -7,10 +7,10 @@ plugins {
 }
 
 android {
-  namespace = "com.archstarter.app"
+  namespace = "com.dmitriisamoilenko.daynightwallpaper"
   compileSdk = 35
   defaultConfig {
-    applicationId = "com.archstarter.app"
+    applicationId = "com.dmitriisamoilenko.daynightwallpaper"
     minSdk = 33
     targetSdk = 35
     versionCode = 1

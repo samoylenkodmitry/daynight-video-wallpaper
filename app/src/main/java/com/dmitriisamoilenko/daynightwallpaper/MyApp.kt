@@ -1,4 +1,4 @@
-package com.archstarter.app
+package com.dmitriisamoilenko.daynightwallpaper
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

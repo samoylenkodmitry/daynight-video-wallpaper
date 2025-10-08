@@ -1,4 +1,4 @@
-package com.archstarter.app
+package com.dmitriisamoilenko.daynightwallpaper
 
 import com.archstarter.core.common.presenter.PresenterProvider
 import dagger.Module

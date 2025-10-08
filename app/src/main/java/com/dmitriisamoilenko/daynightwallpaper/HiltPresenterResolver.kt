@@ -1,4 +1,4 @@
-package com.archstarter.app
+package com.dmitriisamoilenko.daynightwallpaper
 
 import androidx.compose.runtime.Composable
 import com.archstarter.core.common.presenter.ParamInit

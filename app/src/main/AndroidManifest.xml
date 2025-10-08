@@ -1,6 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.archstarter.app">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission
         android:name="android.permission.BIND_WALLPAPER"
@@ -8,7 +7,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 
     <application
-        android:name=".MyApp"
+        android:name="com.dmitriisamoilenko.daynightwallpaper.MyApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -16,7 +15,7 @@
         android:label="DayNight Video Wallpaper"
         android:theme="@style/Theme.DayNightVideoWallpaper">
         <activity
-            android:name=".MainActivity"
+            android:name="com.dmitriisamoilenko.daynightwallpaper.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,7 +24,7 @@
         </activity>
 
         <service
-            android:name=".DayNightWallpaperService"
+            android:name="com.dmitriisamoilenko.daynightwallpaper.DayNightWallpaperService"
             android:label="DayNight Video Wallpaper"
             android:permission="android.permission.BIND_WALLPAPER"
             android:exported="true">
