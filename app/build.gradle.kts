@@ -6,6 +6,17 @@ plugins {
   alias(libs.plugins.ksp)
 }
 
+val releaseKeystorePath = System.getenv("ANDROID_SIGNING_KEYSTORE")
+val releaseKeystorePassword = System.getenv("ANDROID_SIGNING_KEYSTORE_PASSWORD")
+val releaseKeyAlias = System.getenv("ANDROID_SIGNING_KEY_ALIAS")
+val releaseKeyPassword = System.getenv("ANDROID_SIGNING_KEY_PASSWORD")
+val isReleaseSigningConfigured = listOf(
+  releaseKeystorePath,
+  releaseKeystorePassword,
+  releaseKeyAlias,
+  releaseKeyPassword
+).all { !it.isNullOrBlank() }
+
 android {
   namespace = "com.dmitriisamoilenko.daynightwallpaper"
   compileSdk = 35
@@ -28,10 +39,25 @@ android {
 
   signingConfigs {
     getByName("debug")
+
+    if (isReleaseSigningConfigured) {
+      create("release") {
+        storeFile = file(releaseKeystorePath!!)
+        storePassword = releaseKeystorePassword
+        keyAlias = releaseKeyAlias
+        keyPassword = releaseKeyPassword
+      }
+    } else {
+      project.logger.lifecycle("Release signing config not provided. Using debug signing for release builds.")
+    }
   }
   buildTypes {
     getByName("release") {
-      signingConfig = signingConfigs.getByName("debug")
+      signingConfig = if (isReleaseSigningConfigured) {
+        signingConfigs.getByName("release")
+      } else {
+        signingConfigs.getByName("debug")
+      }
     }
   }
 
