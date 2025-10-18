@@ -1,5 +1,6 @@
 package com.archstarter.core.common.wallpaper
 
+import android.content.ContentResolver
 import android.net.Uri
 
 /**
@@ -10,7 +11,13 @@ data class SlotConfiguration(
     val videoUri: Uri?,
 ) {
     val videoLabel: String?
-        get() = videoUri?.lastPathSegment
+        get() = videoUri?.let { uri ->
+            if (uri.scheme == ContentResolver.SCHEME_ANDROID_RESOURCE) {
+                "${slot.displayName} (Default)"
+            } else {
+                uri.lastPathSegment
+            }
+        }
 }
 
 /**

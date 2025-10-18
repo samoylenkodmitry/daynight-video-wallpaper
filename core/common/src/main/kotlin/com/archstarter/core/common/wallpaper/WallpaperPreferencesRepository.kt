@@ -34,6 +34,7 @@ class WallpaperPreferencesRepository @Inject constructor(
 ) {
     private val dataStore = context.wallpaperDataStore
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val bundledVideos by lazy { defaultSlotVideos(context) }
 
     private val settingsFlow: Flow<WallpaperSettings> = dataStore.data
         .catch { throwable ->
@@ -58,6 +59,7 @@ class WallpaperPreferencesRepository @Inject constructor(
             )
             val configs = DaySlot.values().associateWith { slot ->
                 val uri = preferences[slotKey(slot)]?.let { Uri.parse(it) }
+                    ?: bundledVideos[slot]
                 SlotConfiguration(slot, uri)
             }
             WallpaperSettings(
